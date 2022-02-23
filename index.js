@@ -1,5 +1,4 @@
 const inquirer = require("inquirer");
-const fs = require("fs");
 
 const Engineer = require("./lib/Engineer");
 const Intern = require("./lib/Intern");
@@ -7,9 +6,10 @@ const Manager = require("./lib/Manager");
 
 const generateTeam = require("./src/generated-team");
 
+
 const team = [];
 
-const promptUser = () => {
+function promptUser() {
   console.log("Create your team:");
   inquirer
     .prompt([
@@ -18,7 +18,7 @@ const promptUser = () => {
         name: "managerName",
         message: "What is the manager's name?",
         validate: (answer) => {
-          if (answer === "") {
+          if ((answer = "")) {
             console.log("Please enter the manager name.");
             return false;
           }
@@ -65,15 +65,19 @@ const promptUser = () => {
       },
     ])
     .then((managerInput) => {
-      const { name, id, email, officeNumber } = managerInput;
-      const manager = new Manager(name, id, email, officeNumber);
-
+      const manager = new Manager(
+        managerInput.managerName,
+        managerInput.managerId,
+        managerInput.managerEmail,
+        managerInput.officeNumber
+      );
+      createTeam();
       team.push(manager);
-      console.log(manager);
+      console.log(managerInput);
     });
-};
+}
 
-const createTeam = () => {
+function createTeam() {
   console.log("Creating Team");
 
   return inquirer
@@ -102,7 +106,7 @@ const createTeam = () => {
         name: "id",
         message: "Enter the employee's id:",
         validate: (nameInput) => {
-          if ((answer) => 0) {
+          if (isNaN(nameInput)) {
             console.log("Enter a valid Id.");
             return false;
           } else {
@@ -153,50 +157,33 @@ const createTeam = () => {
         },
       },
       {
-        type: "confirmEmployee",
+        type: "confirm",
         name: "addEmployee",
         message: "Do you want to add another employee?",
-        default: false,
       },
     ])
     .then((employeeData) => {
-      let { Employeename, id, email, role, github, school, addEmployee } =
+      let { employeeName, id, email, role, github, school, addEmployee } =
         employeeData;
       let employee;
 
       if (role === "Engineer") {
-        employee = new Engineer(Employeename, id, email, github);
+        employee = new Engineer(employeeName, id, email, github);
+        console.log(employee);
+      } else if (role === "Intern") {
+        employee = new Intern(employeeName, id, email, school);
+
         console.log(employee);
       }
       team.push(employee);
 
-      if ("confirmEmployee") {
-        return addEmployee(team);
+      if (addEmployee) {
+        return createTeam(team);
       } else {
         return team;
       }
     });
-};
+}
 
-const generateFile = (data) => {
-  fs.generateFile("./dist/index.html", data, (err) => {
-    if (err) {
-      console.log("err");
-      return;
-    } else {
-      console.log("Team sucessfully generated.");
-    }
-  });
-};
+promptUser();
 
-addManager()
-  .then(addEmployee)
-  .then((team) => {
-    return generateTeam(team);
-  })
-  .then((indexHTML) => {
-    return fs.writeFile(indexHTML);
-  })
-  .catch((err) => {
-    console.log(err);
-  });
